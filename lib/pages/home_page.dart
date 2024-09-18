@@ -140,6 +140,12 @@ class _HomePageState extends State<HomePage> {
         _currentRouteIndex++;
       } else {
         _routeAnimationTimer?.cancel();
+        // Calculate the midpoint between _routePoints[0] and _routePoints[1]
+        LatLng center = LatLng(
+            (_routePoints[0].latitude + _routePoints[1].latitude) / 2,
+            (_routePoints[0].longitude + _routePoints[1].longitude) / 2);
+        _mapController.moveAndRotate(
+            center, 18, _calculateBearing(_routePoints[0], _routePoints[1]));
       }
     });
   }
