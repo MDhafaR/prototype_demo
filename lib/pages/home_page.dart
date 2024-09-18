@@ -137,20 +137,25 @@ class _HomePageState extends State<HomePage> {
   void _startRouteAnimation() {
     _currentRouteIndex = 0;
     _routeAnimationTimer?.cancel();
-    _routeAnimationTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    _routeAnimationTimer =
+        Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (_currentRouteIndex < _routePoints.length) {
         _mapController.move(_routePoints[_currentRouteIndex], 16);
         _currentRouteIndex++;
       } else {
         _routeAnimationTimer?.cancel();
-        // Calculate the midpoint between _routePoints[0] and _routePoints[1]
-        LatLng center = LatLng(
-            (_routePoints[0].latitude + _routePoints[1].latitude) / 2,
-            (_routePoints[0].longitude + _routePoints[1].longitude) / 2);
-        _mapController.moveAndRotate(
-            center, 18, _calculateBearing(_routePoints[0], _routePoints[1]));
+        _moveMapToMidPoint();
       }
     });
+  }
+
+  void _moveMapToMidPoint() {
+    // Calculate the midpoint between _routePoints[0] and _routePoints[1]
+    LatLng center = LatLng(
+        (_routePoints[0].latitude + _routePoints[1].latitude) / 2,
+        (_routePoints[0].longitude + _routePoints[1].longitude) / 2);
+    _mapController.moveAndRotate(
+        center, 18, _calculateBearing(_routePoints[0], _routePoints[1]));
   }
 
   @override
@@ -180,6 +185,7 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.stop),
             onPressed: () {
               _routeAnimationTimer?.cancel();
+              _moveMapToMidPoint();
             },
           ),
         ],
@@ -240,8 +246,8 @@ class _HomePageState extends State<HomePage> {
                       width: 40,
                       point: LatLng(_currentPosition!.latitude,
                           _currentPosition!.longitude),
-                      child:
-                          const Icon(Icons.my_location, size: 50, color: Colors.blue),
+                      child: const Icon(Icons.my_location,
+                          size: 50, color: Colors.blue),
                     ),
                   ],
                 ]),
