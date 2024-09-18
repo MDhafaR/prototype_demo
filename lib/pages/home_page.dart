@@ -34,6 +34,28 @@ class _HomePageState extends State<HomePage> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.technoinfinity.prototype',
               ),
+        MarkerLayer(markers: [
+          Marker(
+                  rotate: true,
+                  height: 50,
+                  width: 50,
+                  point: LatLng(-6.9481298, 107.6595104),
+                  child: Icon(Icons.location_on, size: 50)
+                ),
+                Marker(
+                    rotate: true,
+                    height: 50,
+                    width: 50,
+                    point: LatLng(-6.9539400, 107.6599104),
+                    child: Icon(Icons.location_on, size: 50)),
+                Marker(
+                  rotate: true,
+                  height: 50,
+                  width: 50,
+                  point: LatLng(-6.9481298, 107.6634104),
+                  child: Icon(Icons.location_on, size: 50)
+                ),
+        ])
       ])
     );
   }
