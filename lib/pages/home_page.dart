@@ -29,8 +29,67 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _currentPosition = position;
       });
+      await _getRoute(_currentPosition!, null, null);
     } catch (e) {
       debugPrint(e.toString());
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _getRoute(
+      Position start, double? endLatitude, double? endLongitude) async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final OpenRouteService client = OpenRouteService(
+        apiKey: '5b3ce3597851110001cf6248387193944b4147e28f526f7e9b949e63',
+      );
+      final List<ORSCoordinate> routeCoordinates =
+          await client.directionsRouteCoordsGet(
+        startCoordinate:
+            ORSCoordinate(latitude: start.latitude, longitude: start.longitude),
+        endCoordinate: ORSCoordinate(
+            latitude: endLatitude ?? start.latitude,
+            longitude: endLongitude ?? start.longitude),
+      );
+      final List<LatLng> routePoints = routeCoordinates
+          .map(
+              (coordinate) => LatLng(coordinate.latitude, coordinate.longitude))
+          .toList();
+
+      final response = await client.directionsRouteGeoJsonGet(
+        startCoordinate:
+            ORSCoordinate(latitude: start.latitude, longitude: start.longitude),
+        endCoordinate: ORSCoordinate(
+            latitude: endLatitude ?? start.latitude,
+            longitude: endLongitude ?? start.longitude),
+      );
+
+      final List<String> instructions = [];
+      if (response.features.isNotEmpty) {
+        final feature = response.features[0];
+        final segments = feature.properties['segments'] as List;
+        for (var segment in segments) {
+          if (segment['steps'] != null) {
+            for (var step in segment['steps']) {
+              if (step['instruction'] != null) {
+                instructions.add(step['instruction']);
+              }
+            }
+          }
+        }
+      }
+
+      setState(() {
+        _routePoints = routePoints;
+      });
+
+    } catch (e) {
+      debugPrint('Error getting route: ${e.toString()}');
     } finally {
       setState(() {
         _isLoading = false;
@@ -59,6 +118,12 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Prototype Demo'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.my_location),
+            onPressed: _centerOnCurrentLocation,
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -75,58 +140,40 @@ class _HomePageState extends State<HomePage> {
                 ),
                 MarkerLayer(markers: [
                   Marker(
+                  rotate: true,
+                  height: 50,
+                  width: 50,
+                  point: LatLng(-6.9481298, 107.6595104),
+                  child: IconButton(
+                    onPressed: () {
+                      _getRoute(_currentPosition!, -6.9481298, 107.6595104);
+                    },
+                    icon: Icon(Icons.location_on, size: 50),
+                  ),
+                ),
+                Marker(
                     rotate: true,
                     height: 50,
                     width: 50,
-                    point: LatLng(-6.9481298, 107.6595104),
+                    point: LatLng(-6.9539400, 107.6599104),
                     child: IconButton(
                       onPressed: () {
-                        setState(() {
-                          _routePoints = [
-                            LatLng(-6.9481298, 107.6595104),
-                            LatLng(_currentPosition!.latitude,
-                                _currentPosition!.longitude)
-                          ];
-                        });
+                        _getRoute(_currentPosition!, -6.9539400, 107.6599104);
                       },
                       icon: Icon(Icons.location_on, size: 50),
-                    ),
+                    )),
+                Marker(
+                  rotate: true,
+                  height: 50,
+                  width: 50,
+                  point: LatLng(-6.9481298, 107.6634104),
+                  child: IconButton(
+                    onPressed: () {
+                      _getRoute(_currentPosition!, -6.9481298, 107.6634104);
+                    },
+                    icon: Icon(Icons.location_on, size: 50),
                   ),
-                  Marker(
-                      rotate: true,
-                      height: 50,
-                      width: 50,
-                      point: LatLng(-6.9539400, 107.6599104),
-                      child: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _routePoints = [
-                              LatLng(-6.9539400, 107.6599104),
-                              LatLng(_currentPosition!.latitude,
-                                  _currentPosition!.longitude)
-                            ];
-                          });
-                        },
-                        icon: Icon(Icons.location_on, size: 50),
-                      )),
-                  Marker(
-                    rotate: true,
-                    height: 50,
-                    width: 50,
-                    point: LatLng(-6.9481298, 107.6634104),
-                    child: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _routePoints = [
-                            LatLng(-6.9481298, 107.6634104),
-                            LatLng(_currentPosition!.latitude,
-                                _currentPosition!.longitude)
-                          ];
-                        });
-                      },
-                      icon: Icon(Icons.location_on, size: 50),
-                    ),
-                  ),
+                ),
                   if (_currentPosition != null) ...[
                     Marker(
                       rotate: true,
