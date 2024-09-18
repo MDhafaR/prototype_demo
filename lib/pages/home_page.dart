@@ -88,6 +88,9 @@ class _HomePageState extends State<HomePage> {
         _routePoints = routePoints;
       });
 
+      // Start following the route
+      _startRouteAnimation();
+
     } catch (e) {
       debugPrint('Error getting route: ${e.toString()}');
     } finally {
@@ -106,11 +109,52 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  double _calculateBearing(LatLng start, LatLng end) {
+    var startLat = start.latitude * pi / 180;
+    var startLng = start.longitude * pi / 180;
+    var endLat = end.latitude * pi / 180;
+    var endLng = end.longitude * pi / 180;
+
+    var dLng = endLng - startLng;
+
+    var y = sin(dLng) * cos(endLat);
+    var x =
+        cos(startLat) * sin(endLat) - sin(startLat) * cos(endLat) * cos(dLng);
+
+    var bearing = atan2(y, x);
+    bearing = bearing * 180 / pi;
+    bearing = (bearing + 360) % 360;
+
+    return bearing;
+  }
+
+  int _currentRouteIndex = 0;
+  Timer? _routeAnimationTimer;
+
+  void _startRouteAnimation() {
+    _currentRouteIndex = 0;
+    _routeAnimationTimer?.cancel();
+    _routeAnimationTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      if (_currentRouteIndex < _routePoints.length) {
+        _mapController.move(_routePoints[_currentRouteIndex], 16);
+        _currentRouteIndex++;
+      } else {
+        _routeAnimationTimer?.cancel();
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
     _getCurrentPosition();
+  }
+
+  @override
+  void dispose() {
+    _routeAnimationTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -122,6 +166,12 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: Icon(Icons.my_location),
             onPressed: _centerOnCurrentLocation,
+          ),
+          IconButton(
+            icon: Icon(Icons.stop),
+            onPressed: () {
+              _routeAnimationTimer?.cancel();
+            },
           ),
         ],
       ),
