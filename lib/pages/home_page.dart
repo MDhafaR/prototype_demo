@@ -12,6 +12,7 @@ class _HomePageState extends State<HomePage> {
   Position? _currentPosition;
   bool _isLoading = false;
   List<LatLng> _routePoints = [];
+  List<String> _routeInstructions = [];
 
   Future<void> _getCurrentPosition() async {
     setState(() {
@@ -61,6 +62,7 @@ class _HomePageState extends State<HomePage> {
               (coordinate) => LatLng(coordinate.latitude, coordinate.longitude))
           .toList();
 
+      // Get route instructions
       final response = await client.directionsRouteGeoJsonGet(
         startCoordinate:
             ORSCoordinate(latitude: start.latitude, longitude: start.longitude),
@@ -69,6 +71,7 @@ class _HomePageState extends State<HomePage> {
             longitude: endLongitude ?? start.longitude),
       );
 
+      // Parse instructions
       final List<String> instructions = [];
       if (response.features.isNotEmpty) {
         final feature = response.features[0];
@@ -86,11 +89,11 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
         _routePoints = routePoints;
+        _routeInstructions = instructions;
       });
 
       // Start following the route
       _startRouteAnimation();
-
     } catch (e) {
       debugPrint('Error getting route: ${e.toString()}');
     } finally {
@@ -134,7 +137,7 @@ class _HomePageState extends State<HomePage> {
   void _startRouteAnimation() {
     _currentRouteIndex = 0;
     _routeAnimationTimer?.cancel();
-    _routeAnimationTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+    _routeAnimationTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (_currentRouteIndex < _routePoints.length) {
         _mapController.move(_routePoints[_currentRouteIndex], 16);
         _currentRouteIndex++;
@@ -170,11 +173,11 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Prototype Demo'),
         actions: [
           IconButton(
-            icon: Icon(Icons.my_location),
+            icon: const Icon(Icons.my_location),
             onPressed: _centerOnCurrentLocation,
           ),
           IconButton(
-            icon: Icon(Icons.stop),
+            icon: const Icon(Icons.stop),
             onPressed: () {
               _routeAnimationTimer?.cancel();
             },
@@ -185,8 +188,8 @@ class _HomePageState extends State<HomePage> {
         children: [
           FlutterMap(
               mapController: _mapController,
-              options: MapOptions(
-                initialCenter: const LatLng(-6.9481298, 107.6595105),
+              options: const MapOptions(
+                initialCenter: LatLng(-6.9481298, 107.6595105),
                 initialZoom: 15,
               ),
               children: [
@@ -196,40 +199,40 @@ class _HomePageState extends State<HomePage> {
                 ),
                 MarkerLayer(markers: [
                   Marker(
-                  rotate: true,
-                  height: 50,
-                  width: 50,
-                  point: LatLng(-6.9481298, 107.6595104),
-                  child: IconButton(
-                    onPressed: () {
-                      _getRoute(_currentPosition!, -6.9481298, 107.6595104);
-                    },
-                    icon: Icon(Icons.location_on, size: 50),
-                  ),
-                ),
-                Marker(
                     rotate: true,
                     height: 50,
                     width: 50,
-                    point: LatLng(-6.9539400, 107.6599104),
+                    point: const LatLng(-6.9481298, 107.6595104),
                     child: IconButton(
                       onPressed: () {
-                        _getRoute(_currentPosition!, -6.9539400, 107.6599104);
+                        _getRoute(_currentPosition!, -6.9481298, 107.6595104);
                       },
-                      icon: Icon(Icons.location_on, size: 50),
-                    )),
-                Marker(
-                  rotate: true,
-                  height: 50,
-                  width: 50,
-                  point: LatLng(-6.9481298, 107.6634104),
-                  child: IconButton(
-                    onPressed: () {
-                      _getRoute(_currentPosition!, -6.9481298, 107.6634104);
-                    },
-                    icon: Icon(Icons.location_on, size: 50),
+                      icon: const Icon(Icons.location_on, size: 50),
+                    ),
                   ),
-                ),
+                  Marker(
+                      rotate: true,
+                      height: 50,
+                      width: 50,
+                      point: const LatLng(-6.9539400, 107.6599104),
+                      child: IconButton(
+                        onPressed: () {
+                          _getRoute(_currentPosition!, -6.9539400, 107.6599104);
+                        },
+                        icon: const Icon(Icons.location_on, size: 50),
+                      )),
+                  Marker(
+                    rotate: true,
+                    height: 50,
+                    width: 50,
+                    point: const LatLng(-6.9481298, 107.6634104),
+                    child: IconButton(
+                      onPressed: () {
+                        _getRoute(_currentPosition!, -6.9481298, 107.6634104);
+                      },
+                      icon: const Icon(Icons.location_on, size: 50),
+                    ),
+                  ),
                   if (_currentPosition != null) ...[
                     Marker(
                       rotate: true,
@@ -238,7 +241,7 @@ class _HomePageState extends State<HomePage> {
                       point: LatLng(_currentPosition!.latitude,
                           _currentPosition!.longitude),
                       child:
-                          Icon(Icons.my_location, size: 50, color: Colors.blue),
+                          const Icon(Icons.my_location, size: 50, color: Colors.blue),
                     ),
                   ],
                 ]),
@@ -253,7 +256,25 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ]),
-          if (_isLoading) Center(child: CircularProgressIndicator()),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.7),
+              borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24)),
+            ),
+            height: 240,
+            child: ListView.builder(
+              itemCount: _routeInstructions.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  leading: const Icon(Icons.directions),
+                  title: Text(_routeInstructions[index]),
+                );
+              },
+            ),
+          ),
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
         ],
       ),
     );
