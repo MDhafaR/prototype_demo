@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:prototype_demo/cubit/product_cubit.dart';
 import 'package:prototype_demo/pages/main_page.dart';
 
 void main() {
@@ -10,8 +12,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MainScreen(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => ProductCubit(),
+        )
+      ],
+      child: const MaterialApp(
+        home: MainScreen(),
+      ),
     );
   }
 }
