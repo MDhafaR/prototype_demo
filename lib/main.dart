@@ -1,7 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:prototype_demo/model/pagination_model.dart';
 import 'package:searchable_paginated_dropdown/searchable_paginated_dropdown.dart';
+import 'package:dio/dio.dart';
+
+import 'model/pagination_model.dart';
 
 void main() => runApp(const MyApp());
 
@@ -51,10 +52,10 @@ class _MyAppState extends State<MyApp> {
                 futureRequest: () async {
                   final paginatedList = await getAnimeList(page: 1, key: '');
                   return paginatedList?.data
-                      .map((e) => SearchableDropdownMenuItem(
+                      ?.map((e) => SearchableDropdownMenuItem(
                           value: e.malId,
-                          label: e.title,
-                          child: Text(e.title)))
+                          label: e.title ?? '',
+                          child: Text(e.title ?? '')))
                       .toList();
                 },
                 onChanged: (int? value) {
